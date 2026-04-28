@@ -12,7 +12,8 @@
 
 <!-- WeTrade Heatmap -->
 <script>window.HEATMAP_ENDPOINT = "https://heatmap.wetrademarketing.com/api/track";</script>
-<script src="https://heatmap.wetrademarketing.com/tracker/tracker.js?v=3" async></script>
+<script src="https://heatmap.wetrademarketing.com/tracker/tracker.js" async></script>
+
 <!--
   UNIVERSAL CTA TRACKING - auto-detects CTAs on any landing page
   Detects via: data-track attribute, class patterns, href patterns, button text (EN/ES/ID/TH)
@@ -677,6 +678,12 @@ function setLang(lang){
 
 const REGISTER_BASE = 'https://register.wetradebroker.com/ld-register?source=GB_LP_MDLT_202604';
 
+// Per-language overrides. If a language has an override, clicking the CTA
+// redirects to that URL in a new tab instead of opening the iframe modal.
+const REGISTER_OVERRIDES = {
+  th: 'https://portal.wetrade.com/register?campaign=TH_LP_MDLT_202604&language=th&utm_country=TH&utm_source=SC&utm_medium=FB&utm_campaign=MillionDollarLiveTrading&utm_date=260401',
+};
+
 function buildRegisterUrl(lang){
   // Append language param while preserving the existing source param
   const sep = REGISTER_BASE.includes('?') ? '&' : '?';
@@ -685,17 +692,25 @@ function buildRegisterUrl(lang){
 
 function syncIframeLang(){
   const iframe = document.getElementById('registerIframe');
-  if (iframe && iframe.src) {
-    // only reload if modal already opened
+  if (iframe && iframe.src && iframe.src !== 'about:blank') {
+    // only reload if modal already opened with a real URL
     iframe.src = buildRegisterUrl(document.documentElement.lang || 'en');
   }
 }
 
 function openRegister(){
+  const lang = document.documentElement.lang || 'en';
+
+  // Language-specific redirect (e.g. Thai) — bypass modal, redirect in same tab
+  if (REGISTER_OVERRIDES[lang]) {
+    window.location.href = REGISTER_OVERRIDES[lang];
+    return;
+  }
+
+  // Default: open iframe modal
   const backdrop = document.getElementById('modalBackdrop');
   const iframe = document.getElementById('registerIframe');
   const loading = document.getElementById('modalLoading');
-  const lang = document.documentElement.lang || 'en';
 
   loading.classList.remove('hidden');
   iframe.src = buildRegisterUrl(lang);
